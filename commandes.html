@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <title>Gestion Commandes — Celina</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #fdf6f0; color: #333; }
+    
+    header {
+      background: #ff6b6b;
+      color: white;
+      padding: 30px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { font-size: 1.5rem; }
+    header p { opacity: 0.9; font-size: 0.9rem; }
+
+    main { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+
+    .form-box {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 25px;
+      border-left: 4px solid #ff6b6b;
+    }
+
+    h2 { color: #ff6b6b; margin-bottom: 15px; }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+
+    button {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    button:hover { background: #ff5252; }
+
+    .commandes-box {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+    }
+
+    .commande {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .commande:last-child { border-bottom: none; }
+
+    .commande-info { flex: 1; }
+    .commande-info h3 { font-size: 1rem; margin-bottom: 3px; }
+    .commande-info p { font-size: 0.85rem; color: #888; }
+
+    .badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    .badge-attente { background: #fff3cd; color: #856404; }
+    .badge-livre { background: #d1fae5; color: #065f46; }
+
+    .btn-livrer {
+      background: #4ade80;
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .stat {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat h3 { font-size: 0.85rem; color: #888; margin-bottom: 8px; }
+    .stat .num { font-size: 2rem; font-weight: bold; color: #ff6b6b; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Celina's Clothes</h1>
+    <p>Gestion des commandes</p>
+  </div>
+  <div style="text-align:right;">
+    <p style="font-size:1.2rem;">👗</p>
+  </div>
+</header>
+
+<main>
+  <div class="stats">
+    <div class="stat">
+      <h3>Total commandes</h3>
+      <div class="num" id="total">0</div>
+    </div>
+    <div class="stat">
+      <h3>En attente</h3>
+      <div class="num" id="attente" style="color:#856404;">0</div>
+    </div>
+    <div class="stat">
+      <h3>Livrées</h3>
+      <div class="num" id="livrees" style="color:#065f46;">0</div>
+    </div>
+  </div>
+
+  <div class="form-box">
+    <h2>Nouvelle commande</h2>
+    <input type="text" id="nom" placeholder="Nom du client" />
+    <input type="text" id="article" placeholder="Article commandé" />
+    <input type="text" id="telephone" placeholder="Numéro de téléphone" />
+    <button onclick="ajouterCommande()">Ajouter la commande</button>
+  </div>
+
+  <div class="commandes-box">
+    <h2>Commandes en cours</h2>
+    <div id="liste"></div>
+  </div>
+</main>
+
+<script>
+  let commandes = JSON.parse(localStorage.getItem('commandes')) || [];
+
+  function ajouterCommande() {
+    const nom = document.getElementById('nom').value;
+    const article = document.getElementById('article').value;
+    const telephone = document.getElementById('telephone').value;
+
+    if (!nom || !article) return;
+
+    commandes.push({
+      id: Date.now(),
+      nom,
+      article,
+      telephone,
+      statut: 'attente',
+      date: new Date().toLocaleDateString('fr-FR')
+    });
+
+    document.getElementById('nom').value = '';
+    document.getElementById('article').value = '';
+    document.getElementById('telephone').value = '';
+
+    afficher();
+  }
+
+  function livrer(id) {
+    commandes = commandes.map(c => c.id === id ? {...c, statut: 'livre'} : c);
+    afficher();
+    localStorage.setItem('commandes', JSON.stringify(commandes));
+  }
+
+  function afficher() {
+    const liste = document.getElementById('liste');
+    liste.innerHTML = '';
+
+    commandes.forEach(c => {
+      liste.innerHTML += `
+        <div class="commande">
+          <div class="commande-info">
+            <h3>${c.nom} — ${c.article}</h3>
+            <p>${c.telephone} · ${c.date}</p>
+          </div>
+          <span class="badge ${c.statut === 'livre' ? 'badge-livre' : 'badge-attente'}">
+            ${c.statut === 'livre' ? 'Livrée' : 'En attente'}
+          </span>
+          ${c.statut !== 'livre' ? `<button class="btn-livrer" onclick="livrer(${c.id})">Marquer livrée</button>` : ''}
+        </div>
+      `;
+    });
+
+    document.getElementById('total').textContent = commandes.length;
+    document.getElementById('attente').textContent = commandes.filter(c => c.statut === 'attente').length;
+    document.getElementById('livrees').textContent = commandes.filter(c => c.statut === 'livre').length;
+  }
+  afficher();
+</script>
+
+</body>
+</html>
